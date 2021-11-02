@@ -1,39 +1,80 @@
 import "./styles/styles.styl"
+import "./poems.js"
 
-console.log("poetics!")
+if (window.location.pathname === "/") initHomePage()
 
-// const canvas = document.getElementById('canvas');
-// const ctx = canvas.getContext('2d');
-// canvas.width = window.innerWidth
-// canvas.height = window.innerHeight
+function initHomePage () {
+  const container = document.getElementById('container')
 
-// ctx.fillRect(1000, 500, 100, 100)
 
-// img.addEventListener('load', () => {
-// })
 
-// for (let i = 1; i <= 8; i++) {
-//   const img = new Image()
+  for (let i = 1; i <= 8; i++) {
+    const img = new Image()
+    img.src = `./assets/${i}.png`
 
-//   img.onload = () => {
-//     ctx.drawImage(img, 100 * i, 100, 100, 100)
-//   }
+    container.insertAdjacentHTML('beforeend', `
+      <div class="imageContainer">
+        <img src="./assets/${i}.png" />    
+        <div id="image-${i}" class="colorCover" />
+      </div>
+    `)
 
-// }
+    // container.insertAdjacentHTML('beforeend', `
+    //   <div class="break" />
+    // `)
 
-const container = document.getElementById('container')
+  }
 
-for (let i = 1; i <= 8; i++) {
-  const img = new Image()
-  img.src = `./assets/${i}.png`
 
-  container.insertAdjacentHTML('beforeend', `
-    <div class="imageContainer">
-      <img src="./assets/${i}.png" />    
-      <div id="image-${i}" class="colorCover" />
-    </div>
-  `)
+
+
+  const NUM_OF_IMAGES = 8
+
+  // https://stackoverflow.com/questions/3746725/how-to-create-an-array-containing-1-n
+  let imageIndexArr = Array.from({ length: NUM_OF_IMAGES }, (_, i) => i + 1)
+
+  imageIndexArr = randomiseArray(imageIndexArr)
+  // curIndex keeps track of which el in array we're on
+  let curIndex = 0
+
+  // this keeps track of which image index we had just selected
+  let prevSelectedIndex
+
+  const interval = setInterval(() => {
+
+    // re-randomise, reset cur index
+    if (curIndex >= NUM_OF_IMAGES) {
+      imageIndexArr = randomiseArray(imageIndexArr)
+      curIndex = 0
+      clearInterval(interval)
+    }
+
+    console.log(curIndex, prevSelectedIndex)
+    console.log(imageIndexArr)
+
+    if (prevSelectedIndex) {
+      // remove selected from previous image
+      console.log('prev el', document.getElementById(`image-${prevSelectedIndex}`))
+      document.getElementById(`image-${prevSelectedIndex}`).classList.remove('selected')
+    }
+
+    // add selected class to selected image
+    const selectedImage = document.getElementById(`image-${imageIndexArr[ curIndex ]}`)
+    selectedImage.classList.add('selected')
+
+    prevSelectedIndex = imageIndexArr[ curIndex ]
+    curIndex++
+
+  }, 1000)
+
+
 }
 
-const selectedImage = document.getElementById(`image-3`)
-selectedImage.classList.add('selected')
+function randomiseArray (array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [ array[ i ], array[ j ] ] = [ array[ j ], array[ i ] ];
+  }
+
+  return array
+};

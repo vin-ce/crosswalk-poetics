@@ -12,6 +12,7 @@
   "license": "ISC",
   "dependencies": {
     "esbuild-stylus-loader": "^0.3.2",
+    "firebase": "^9.2.0",
     "stylus": "^0.55.0"
   },
   "devDependencies": {
