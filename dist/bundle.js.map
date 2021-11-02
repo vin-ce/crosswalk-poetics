@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/main.js"],
+  "sourcesContent": ["import \"./styles/styles.styl\"\r\n\r\nconsole.log(\"poetics!\")\r\n\r\n// const canvas = document.getElementById('canvas');\r\n// const ctx = canvas.getContext('2d');\r\n// canvas.width = window.innerWidth\r\n// canvas.height = window.innerHeight\r\n\r\n// ctx.fillRect(1000, 500, 100, 100)\r\n\r\n// img.addEventListener('load', () => {\r\n// })\r\n\r\n// for (let i = 1; i <= 8; i++) {\r\n//   const img = new Image()\r\n\r\n//   img.onload = () => {\r\n//     ctx.drawImage(img, 100 * i, 100, 100, 100)\r\n//   }\r\n\r\n// }\r\n\r\nconst container = document.getElementById('container')\r\n\r\nfor (let i = 1; i <= 8; i++) {\r\n  const img = new Image()\r\n  img.src = `./assets/${i}.png`\r\n\r\n  container.insertAdjacentHTML('beforeend', `\r\n    <div class=\"imageContainer\">\r\n      <img src=\"./assets/${i}.png\" />    \r\n      <div id=\"image-${i}\" class=\"colorCover\" />\r\n    </div>\r\n  `)\r\n}\r\n\r\nconst selectedImage = document.getElementById(`image-3`)\r\nselectedImage.classList.add('selected')"],
+  "mappings": ";;AAEA,UAAQ,IAAI;AAqBZ,MAAM,YAAY,SAAS,eAAe;AAE1C,WAAS,IAAI,GAAG,KAAK,GAAG,KAAK;AAC3B,UAAM,MAAM,IAAI;AAChB,QAAI,MAAM,YAAY;AAEtB,cAAU,mBAAmB,aAAa;AAAA;AAAA,2BAEjB;AAAA,uBACJ;AAAA;AAAA;AAAA;AAKvB,MAAM,gBAAgB,SAAS,eAAe;AAC9C,gBAAc,UAAU,IAAI;",
+  "names": []
+}

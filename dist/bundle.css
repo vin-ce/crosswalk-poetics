@@ -1,0 +1,36 @@
+/* stylus:D:\Vincent Li\Desktop\Code\crosswalk-poetics\src\styles\styles.styl */
+:root {
+  font-size: 62.5%;
+}
+body {
+  margin: 0;
+}
+h1 {
+  color: #ffc0cb;
+  font-style: italic;
+}
+#container {
+  display: flex;
+}
+.imageContainer {
+  position: relative;
+  margin-bottom: 10rem;
+}
+img {
+  max-width: 18rem;
+  height: 18rem;
+  object-fit: contain;
+  margin: 0 1.2rem;
+}
+.colorCover {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+}
+.selected {
+  opacity: 0;
+}
+/*# sourceMappingURL=bundle.css.map */

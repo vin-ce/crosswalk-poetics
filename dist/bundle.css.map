@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/styles/styles.styl"],
+  "sourcesContent": ["\r\n\r\n:root \r\n  font-size 62.5%\r\n\r\nbody \r\n  margin 0\r\n\r\nh1 \r\n  color pink\r\n  font-style italic\r\n\r\n#container\r\n  display flex\r\n\r\n.imageContainer\r\n  position relative\r\n  margin-bottom 10rem\r\n\r\nimg\r\n  max-width 18rem\r\n  height 18rem\r\n  object-fit contain\r\n  margin 0 1.2rem\r\n\r\n.colorCover\r\n  position absolute\r\n  top 0\r\n  left 0\r\n  background-color rgba(0,0,0,0.5)\r\n  width 100%\r\n  height 100%\r\n\r\n.selected\r\n  opacity 0"],
+  "mappings": ";AAEA;AACE;;AAEF;AACE;;AAEF;AACE;AACA;;AAEF;AACE;;AAEF;AACE;AACA;;AAEF;AACE;AACA;AACA;AACA;;AAEF;AACE;AACA;AACA;AACA;AACA;AACA;;AAEF;AACE;;",
+  "names": []
+}
