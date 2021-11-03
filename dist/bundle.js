@@ -1404,16 +1404,16 @@
   a: {
     va2 = l.navigator;
     if (va2) {
-      wa = va2.userAgent;
-      if (wa) {
-        x = wa;
+      wa2 = va2.userAgent;
+      if (wa2) {
+        x = wa2;
         break a;
       }
     }
     x = "";
   }
   var va2;
-  var wa;
+  var wa2;
   function xa(a, b, c) {
     for (const d in a)
       b.call(c, a[d], d, a);
@@ -4112,6 +4112,20 @@
       return new ft([]);
     }
   };
+  var dt = class {
+    constructor(t2) {
+      this.fields = t2, t2.sort(ft.comparator);
+    }
+    covers(t2) {
+      for (const e of this.fields)
+        if (e.isPrefixOf(t2))
+          return true;
+      return false;
+    }
+    isEqual(t2) {
+      return nt(this.fields, t2.fields, (t3, e) => t3.isEqual(e));
+    }
+  };
   var _t = class {
     constructor(t2) {
       this.binaryString = t2;
@@ -4195,6 +4209,9 @@
   }
   function Rt(t2) {
     return t2 === 0 && 1 / t2 == -1 / 0;
+  }
+  function bt(t2) {
+    return typeof t2 == "number" && Number.isInteger(t2) && !Rt(t2) && t2 <= Number.MAX_SAFE_INTEGER && t2 >= Number.MIN_SAFE_INTEGER;
   }
   var Pt = class {
     constructor(t2) {
@@ -4494,6 +4511,21 @@
       return new Ut(Bt(this.value));
     }
   };
+  function qt(t2) {
+    const e = [];
+    return ct(t2.fields, (t3, n) => {
+      const s = new ft([t3]);
+      if (Lt(n)) {
+        const t4 = qt(n.mapValue).fields;
+        if (t4.length === 0)
+          e.push(s);
+        else
+          for (const n2 of t4)
+            e.push(s.child(n2));
+      } else
+        e.push(s);
+    }), new dt(e);
+  }
   var Kt = class {
     constructor(t2, e, n, s, i) {
       this.key = t2, this.documentType = e, this.version = n, this.data = s, this.documentState = i;
@@ -4902,6 +4934,9 @@
       integerValue: "" + t2
     };
   }
+  function Ce(t2, e) {
+    return bt(e) ? De(e) : Se(t2, e);
+  }
   var Ne = class {
     constructor() {
       this._ = void 0;
@@ -4984,11 +5019,41 @@
   function Ke(t2) {
     return Ot(t2) && t2.arrayValue.values ? t2.arrayValue.values.slice() : [];
   }
+  var je = class {
+    constructor(t2, e) {
+      this.field = t2, this.transform = e;
+    }
+  };
   function Qe(t2, e) {
     return t2.field.isEqual(e.field) && function(t3, e2) {
       return t3 instanceof Fe && e2 instanceof Fe || t3 instanceof Le && e2 instanceof Le ? nt(t3.elements, e2.elements, Vt) : t3 instanceof Ue && e2 instanceof Ue ? Vt(t3.C, e2.C) : t3 instanceof Oe && e2 instanceof Oe;
     }(t2.transform, e.transform);
   }
+  var We = class {
+    constructor(t2, e) {
+      this.version = t2, this.transformResults = e;
+    }
+  };
+  var Ge = class {
+    constructor(t2, e) {
+      this.updateTime = t2, this.exists = e;
+    }
+    static none() {
+      return new Ge();
+    }
+    static exists(t2) {
+      return new Ge(void 0, t2);
+    }
+    static updateTime(t2) {
+      return new Ge(t2);
+    }
+    get isNone() {
+      return this.updateTime === void 0 && this.exists === void 0;
+    }
+    isEqual(t2) {
+      return this.exists === t2.exists && (this.updateTime ? !!t2.updateTime && this.updateTime.isEqual(t2.updateTime) : !t2.updateTime);
+    }
+  };
   function ze(t2, e) {
     return t2.updateTime !== void 0 ? e.isFoundDocument() && e.version.isEqual(t2.updateTime) : t2.exists === void 0 || t2.exists === e.isFoundDocument();
   }
@@ -5021,6 +5086,14 @@
     }(t2, e, n) : function(t3, e2) {
       ze(t3.precondition, e2) && e2.convertToNoDocument(rt.min());
     }(t2, e);
+  }
+  function Xe(t2, e) {
+    let n = null;
+    for (const s of t2.fieldTransforms) {
+      const t3 = e.data.field(s.field), i = $e(s.transform, t3 || null);
+      i != null && (n == null && (n = Ut.empty()), n.set(s.field, i));
+    }
+    return n || null;
   }
   function Ze(t2, e) {
     return t2.type === e.type && (!!t2.key.isEqual(e.key) && (!!t2.precondition.isEqual(e.precondition) && (!!function(t3, e2) {
@@ -5066,6 +5139,16 @@
     }
     return s;
   }
+  var cn = class extends He {
+    constructor(t2, e) {
+      super(), this.key = t2, this.precondition = e, this.type = 2, this.fieldTransforms = [];
+    }
+  };
+  var an = class extends He {
+    constructor(t2, e) {
+      super(), this.key = t2, this.precondition = e, this.type = 3, this.fieldTransforms = [];
+    }
+  };
   var un = class {
     constructor(t2) {
       this.count = t2;
@@ -5073,6 +5156,30 @@
   };
   var hn;
   var ln;
+  function fn(t2) {
+    switch (t2) {
+      default:
+        return L2();
+      case K2.CANCELLED:
+      case K2.UNKNOWN:
+      case K2.DEADLINE_EXCEEDED:
+      case K2.RESOURCE_EXHAUSTED:
+      case K2.INTERNAL:
+      case K2.UNAVAILABLE:
+      case K2.UNAUTHENTICATED:
+        return false;
+      case K2.INVALID_ARGUMENT:
+      case K2.NOT_FOUND:
+      case K2.ALREADY_EXISTS:
+      case K2.PERMISSION_DENIED:
+      case K2.FAILED_PRECONDITION:
+      case K2.ABORTED:
+      case K2.OUT_OF_RANGE:
+      case K2.UNIMPLEMENTED:
+      case K2.DATA_LOSS:
+        return true;
+    }
+  }
   function dn(t2) {
     if (t2 === void 0)
       return O2("GRPC error has no .code"), K2.UNKNOWN;
@@ -5483,6 +5590,9 @@
     return En;
   }
   var An = new wn(Pt.comparator);
+  function Rn() {
+    return An;
+  }
   var bn = new gn(Pt.comparator);
   function Pn(...t2) {
     let e = bn;
@@ -5752,6 +5862,9 @@
   function qn(t2, e) {
     return t2.D ? e.toBase64() : e.toUint8Array();
   }
+  function Kn(t2, e) {
+    return Un(t2, e.toTimestamp());
+  }
   function jn(t2) {
     return B2(!!t2), rt.fromTimestamp(function(t3) {
       const e = gt(t3);
@@ -5766,6 +5879,9 @@
   function Wn(t2) {
     const e = ht.fromString(t2);
     return B2(Ts(e)), e;
+  }
+  function Gn(t2, e) {
+    return Qn(t2.databaseId, e.path);
   }
   function zn(t2, e) {
     const n = Wn(e);
@@ -5787,6 +5903,12 @@
   }
   function Xn(t2) {
     return B2(t2.length > 4 && t2.get(4) === "documents"), t2.popFirst(5);
+  }
+  function Zn(t2, e, n) {
+    return {
+      name: Gn(t2, e),
+      fields: n.value.mapValue.fields
+    };
   }
   function ns(t2, e) {
     let n;
@@ -5835,6 +5957,69 @@
       }
     }
     return n;
+  }
+  function ss(t2, e) {
+    let n;
+    if (e instanceof en)
+      n = {
+        update: Zn(t2, e.key, e.value)
+      };
+    else if (e instanceof cn)
+      n = {
+        delete: Gn(t2, e.key)
+      };
+    else if (e instanceof nn)
+      n = {
+        update: Zn(t2, e.key, e.data),
+        updateMask: ps(e.fieldMask)
+      };
+    else {
+      if (!(e instanceof an))
+        return L2();
+      n = {
+        verify: Gn(t2, e.key)
+      };
+    }
+    return e.fieldTransforms.length > 0 && (n.updateTransforms = e.fieldTransforms.map((t3) => function(t4, e2) {
+      const n2 = e2.transform;
+      if (n2 instanceof Oe)
+        return {
+          fieldPath: e2.field.canonicalString(),
+          setToServerValue: "REQUEST_TIME"
+        };
+      if (n2 instanceof Fe)
+        return {
+          fieldPath: e2.field.canonicalString(),
+          appendMissingElements: {
+            values: n2.elements
+          }
+        };
+      if (n2 instanceof Le)
+        return {
+          fieldPath: e2.field.canonicalString(),
+          removeAllFromArray: {
+            values: n2.elements
+          }
+        };
+      if (n2 instanceof Ue)
+        return {
+          fieldPath: e2.field.canonicalString(),
+          increment: n2.C
+        };
+      throw L2();
+    }(0, t3))), e.precondition.isNone || (n.currentDocument = function(t3, e2) {
+      return e2.updateTime !== void 0 ? {
+        updateTime: Kn(t3, e2.updateTime)
+      } : e2.exists !== void 0 ? {
+        exists: e2.exists
+      } : L2();
+    }(t2, e.precondition)), n;
+  }
+  function rs(t2, e) {
+    return t2 && t2.length > 0 ? (B2(e !== void 0), t2.map((t3) => function(t4, e2) {
+      let n = t4.updateTime ? jn(t4.updateTime) : jn(e2);
+      return n.isEqual(rt.min()) && (n = jn(e2)), new We(n, t4.transformResults || []);
+    }(t3, e))) : [];
   }
   function os(t2, e) {
     return {
@@ -6053,6 +6238,12 @@
       default:
         return L2();
     }
+  }
+  function ps(t2) {
+    const e = [];
+    return t2.fields.forEach((t3) => e.push(t3.canonicalString())), {
+      fieldPaths: e
+    };
   }
   function Ts(t2) {
     return t2.length >= 4 && t2.get(0) === "projects" && t2.get(2) === "databases";
@@ -6288,6 +6479,19 @@
     }
     isEqual(t2) {
       return this.batchId === t2.batchId && nt(this.mutations, t2.mutations, (t3, e) => Ze(t3, e)) && nt(this.baseMutations, t2.baseMutations, (t3, e) => Ze(t3, e));
+    }
+  };
+  var si = class {
+    constructor(t2, e, n, s) {
+      this.batch = t2, this.commitVersion = e, this.mutationResults = n, this.docVersions = s;
+    }
+    static from(t2, e, n) {
+      B2(t2.mutations.length === n.length);
+      let s = Rn();
+      const i = t2.mutations;
+      for (let t3 = 0; t3 < i.length; t3++)
+        s = s.insert(i[t3].key, n[t3].version);
+      return new si(t2, e, n, s);
     }
   };
   var ii = class {
@@ -6610,6 +6814,24 @@
     });
     return n.In = s, n.Qn = i, n.Bn.$n(n.Qn), r;
   }
+  function lr(t2, e) {
+    const n = q2(t2);
+    return n.persistence.runTransaction("Acknowledge batch", "readwrite-primary", (t3) => {
+      const s = e.batch.keys(), i = n.jn.newChangeBuffer({
+        trackRemovals: true
+      });
+      return function(t4, e2, n2, s2) {
+        const i2 = n2.batch, r = i2.keys();
+        let o = js.resolve();
+        return r.forEach((t5) => {
+          o = o.next(() => s2.getEntry(e2, t5)).next((e3) => {
+            const r2 = n2.docVersions.get(t5);
+            B2(r2 !== null), e3.version.compareTo(r2) < 0 && (i2.applyToRemoteDocument(e3, n2), e3.isValidDocument() && s2.addEntry(e3, n2.commitVersion));
+          });
+        }), o.next(() => t4.In.removeMutationBatch(e2, i2));
+      }(n, t3, e, i).next(() => i.apply(t3)).next(() => n.In.performConsistencyCheck(t3)).next(() => n.Qn.Pn(t3, s));
+    });
+  }
   function fr(t2) {
     const e = q2(t2);
     return e.persistence.runTransaction("Get last remote snapshot version", "readonly", (t3) => e.ze.getLastRemoteSnapshotVersion(t3));
@@ -6661,6 +6883,10 @@
         o.isNoDocument() && o.version.isEqual(rt.min()) ? (e.removeEntry(n2, a), r2 = r2.insert(n2, o)) : !c.isValidDocument() || o.version.compareTo(c.version) > 0 || o.version.compareTo(c.version) === 0 && c.hasPendingWrites ? (e.addEntry(o, a), r2 = r2.insert(n2, o)) : $("LocalStore", "Ignoring outdated watch update for ", n2, ". Current version:", c.version, " Watch version:", o.version);
       }), r2;
     });
+  }
+  function _r(t2, e) {
+    const n = q2(t2);
+    return n.persistence.runTransaction("Get next mutation batch", "readonly", (t3) => (e === void 0 && (e = -1), n.In.getNextMutationBatchAfterBatchId(t3, e)));
   }
   function mr(t2, e) {
     const n = q2(t2);
@@ -7521,6 +7747,42 @@
       e.database = Yn(this.N), e.removeTarget = t2, this.mr(e);
     }
   };
+  var eo = class extends Zr {
+    constructor(t2, e, n, s, i) {
+      super(t2, "write_stream_connection_backoff", "write_stream_idle", "health_check_timeout", e, n, i), this.N = s, this.vr = false;
+    }
+    get Vr() {
+      return this.vr;
+    }
+    start() {
+      this.vr = false, this.lastStreamToken = void 0, super.start();
+    }
+    pr() {
+      this.vr && this.Sr([]);
+    }
+    Ar(t2) {
+      return this.sr.ji("Write", t2);
+    }
+    onMessage(t2) {
+      if (B2(!!t2.streamToken), this.lastStreamToken = t2.streamToken, this.vr) {
+        this.ar.reset();
+        const e = rs(t2.writeResults, t2.commitTime), n = jn(t2.commitTime);
+        return this.listener.Dr(n, e);
+      }
+      return B2(!t2.writeResults || t2.writeResults.length === 0), this.vr = true, this.listener.Cr();
+    }
+    Nr() {
+      const t2 = {};
+      t2.database = Yn(this.N), this.mr(t2);
+    }
+    Sr(t2) {
+      const e = {
+        streamToken: this.lastStreamToken,
+        writes: t2.map((t3) => ss(this.N, t3))
+      };
+      this.mr(e);
+    }
+  };
   var no = class extends class {
   } {
     constructor(t2, e, n) {
@@ -7668,6 +7930,60 @@ This typically indicates that your device does not have a healthy Internet conne
       $("RemoteStore", "Retrying IndexedDB access"), await n(), t2.Wr.delete(1), await ro(t2);
     });
   }
+  function To(t2, e) {
+    return e().catch((n) => po(t2, n, e));
+  }
+  async function Eo(t2) {
+    const e = q2(t2), n = No(e);
+    let s = e.jr.length > 0 ? e.jr[e.jr.length - 1].batchId : -1;
+    for (; Io(e); )
+      try {
+        const t3 = await _r(e.localStore, s);
+        if (t3 === null) {
+          e.jr.length === 0 && n.wr();
+          break;
+        }
+        s = t3.batchId, Ao(e, t3);
+      } catch (t3) {
+        await po(e, t3);
+      }
+    Ro(e) && bo(e);
+  }
+  function Io(t2) {
+    return wo(t2) && t2.jr.length < 10;
+  }
+  function Ao(t2, e) {
+    t2.jr.push(e);
+    const n = No(t2);
+    n.hr() && n.Vr && n.Sr(e.mutations);
+  }
+  function Ro(t2) {
+    return wo(t2) && !No(t2).ur() && t2.jr.length > 0;
+  }
+  function bo(t2) {
+    No(t2).start();
+  }
+  async function Po(t2) {
+    No(t2).Nr();
+  }
+  async function vo(t2) {
+    const e = No(t2);
+    for (const n of t2.jr)
+      e.Sr(n.mutations);
+  }
+  async function Vo(t2, e, n) {
+    const s = t2.jr.shift(), i = si.from(s, e, n);
+    await To(t2, () => t2.remoteSyncer.applySuccessfulWrite(i)), await Eo(t2);
+  }
+  async function So(t2, e) {
+    e && No(t2).Vr && await async function(t3, e2) {
+      if (n = e2.code, fn(n) && n !== K2.ABORTED) {
+        const n2 = t3.jr.shift();
+        No(t3).dr(), await To(t3, () => t3.remoteSyncer.rejectFailedWrite(n2.batchId, e2)), await Eo(t3);
+      }
+      var n;
+    }(t2, e), Ro(t2) && bo(t2);
+  }
   async function Do(t2, e) {
     const n = q2(t2);
     e ? (n.Wr.delete(2), await ro(n)) : e || (n.Wr.add(2), await oo(n), n.Hr.set("Unknown"));
@@ -7683,6 +7999,19 @@ This typically indicates that your device does not have a healthy Internet conne
     }), t2.Gr.push(async (e) => {
       e ? (t2.Yr.dr(), fo(t2) ? lo(t2) : t2.Hr.set("Unknown")) : (await t2.Yr.stop(), _o(t2));
     })), t2.Yr;
+  }
+  function No(t2) {
+    return t2.Xr || (t2.Xr = function(t3, e, n) {
+      const s = q2(t3);
+      return s.$r(), new eo(e, s.sr, s.credentials, s.N, n);
+    }(t2.datastore, t2.asyncQueue, {
+      Si: Po.bind(null, t2),
+      Ci: So.bind(null, t2),
+      Cr: vo.bind(null, t2),
+      Dr: Vo.bind(null, t2)
+    }), t2.Gr.push(async (e) => {
+      e ? (t2.Xr.dr(), await Eo(t2)) : (await t2.Xr.stop(), t2.jr.length > 0 && ($("RemoteStore", `Stopping write stream with ${t2.jr.length} pending writes`), t2.jr = []));
+    })), t2.Xr;
   }
   var xo = class {
     constructor(t2, e, n, s, i) {
@@ -8118,6 +8447,35 @@ This typically indicates that your device does not have a healthy Internet conne
     } else
       wc2(n, s.targetId), await gr(n.localStore, s.targetId, true);
   }
+  async function rc2(t2, e, n) {
+    const s = Nc2(t2);
+    try {
+      const t3 = await function(t4, e2) {
+        const n2 = q2(t4), s2 = it.now(), i = e2.reduce((t5, e3) => t5.add(e3.key), Pn());
+        let r;
+        return n2.persistence.runTransaction("Locally write mutations", "readwrite", (t5) => n2.Qn.Pn(t5, i).next((i2) => {
+          r = i2;
+          const o = [];
+          for (const t6 of e2) {
+            const e3 = Xe(t6, r.get(t6.key));
+            e3 != null && o.push(new nn(t6.key, e3, qt(e3.value.mapValue), Ge.exists(true)));
+          }
+          return n2.In.addMutationBatch(t5, s2, o, e2);
+        })).then((t5) => (t5.applyToLocalDocumentSet(r), {
+          batchId: t5.batchId,
+          changes: r
+        }));
+      }(s.localStore, e);
+      s.sharedClientState.addPendingMutation(t3.batchId), function(t4, e2, n2) {
+        let s2 = t4.qo[t4.currentUser.toKey()];
+        s2 || (s2 = new wn(et));
+        s2 = s2.insert(e2, n2), t4.qo[t4.currentUser.toKey()] = s2;
+      }(s, t3.batchId, n), await pc2(s, t3.changes), await Eo(s.remoteStore);
+    } catch (t3) {
+      const e2 = ko(t3, "Failed to persist write");
+      n.reject(e2);
+    }
+  }
   async function oc2(t2, e) {
     const n = q2(t2);
     try {
@@ -8159,6 +8517,43 @@ This typically indicates that your device does not have a healthy Internet conne
       await oc2(s, i2), s.Lo = s.Lo.remove(r), s.Bo.delete(e), yc2(s);
     } else
       await gr(s.localStore, e, false).then(() => wc2(s, e, n)).catch(Fi);
+  }
+  async function uc2(t2, e) {
+    const n = q2(t2), s = e.batch.batchId;
+    try {
+      const t3 = await lr(n.localStore, e);
+      dc2(n, s, null), fc2(n, s), n.sharedClientState.updateMutationState(s, "acknowledged"), await pc2(n, t3);
+    } catch (t3) {
+      await Fi(t3);
+    }
+  }
+  async function hc2(t2, e, n) {
+    const s = q2(t2);
+    try {
+      const t3 = await function(t4, e2) {
+        const n2 = q2(t4);
+        return n2.persistence.runTransaction("Reject batch", "readwrite-primary", (t5) => {
+          let s2;
+          return n2.In.lookupMutationBatch(t5, e2).next((e3) => (B2(e3 !== null), s2 = e3.keys(), n2.In.removeMutationBatch(t5, e3))).next(() => n2.In.performConsistencyCheck(t5)).next(() => n2.Qn.Pn(t5, s2));
+        });
+      }(s.localStore, e);
+      dc2(s, e, n), fc2(s, e), s.sharedClientState.updateMutationState(e, "rejected", n), await pc2(s, t3);
+    } catch (n2) {
+      await Fi(n2);
+    }
+  }
+  function fc2(t2, e) {
+    (t2.Ko.get(e) || []).forEach((t3) => {
+      t3.resolve();
+    }), t2.Ko.delete(e);
+  }
+  function dc2(t2, e, n) {
+    const s = q2(t2);
+    let i = s.qo[s.currentUser.toKey()];
+    if (i) {
+      const t3 = i.get(e);
+      t3 && (n ? t3.reject(n) : t3.resolve(), i = i.remove(e)), s.qo[s.currentUser.toKey()] = i;
+    }
   }
   function wc2(t2, e, n = null) {
     t2.sharedClientState.removeLocalQueryTarget(e);
@@ -8258,6 +8653,10 @@ This typically indicates that your device does not have a healthy Internet conne
   function Cc2(t2) {
     const e = q2(t2);
     return e.remoteStore.remoteSyncer.applyRemoteEvent = oc2.bind(null, e), e.remoteStore.remoteSyncer.getRemoteKeysForTarget = Ec2.bind(null, e), e.remoteStore.remoteSyncer.rejectListen = ac2.bind(null, e), e.$o.Rr = qo.bind(null, e.eventManager), e.$o.Go = Ko.bind(null, e.eventManager), e;
+  }
+  function Nc2(t2) {
+    const e = q2(t2);
+    return e.remoteStore.remoteSyncer.applySuccessfulWrite = uc2.bind(null, e), e.remoteStore.remoteSyncer.rejectFailedWrite = hc2.bind(null, e), e;
   }
   var kc2 = class {
     constructor() {
@@ -8395,6 +8794,9 @@ This typically indicates that your device does not have a healthy Internet conne
   async function Gc2(t2) {
     return t2.onlineComponents || ($("FirestoreClient", "Using default OnlineComponentProvider"), await Qc2(t2, new Fc2())), t2.onlineComponents;
   }
+  function Yc2(t2) {
+    return Gc2(t2).then((t3) => t3.syncEngine);
+  }
   async function Xc2(t2) {
     const e = await Gc2(t2), n = e.eventManager;
     return n.onListen = nc2.bind(null, e.syncEngine), n.onUnlisten = ic2.bind(null, e.syncEngine), n;
@@ -8438,6 +8840,10 @@ This typically indicates that your device does not have a healthy Internet conne
   function da2(t2, e, n, s) {
     if (e === true && s === true)
       throw new j(K2.INVALID_ARGUMENT, `${t2} and ${n} cannot be used together.`);
+  }
+  function wa(t2) {
+    if (!Pt.isDocumentKey(t2))
+      throw new j(K2.INVALID_ARGUMENT, `Invalid document reference. Document references must have an even number of segments, but ${t2} has ${t2.length}.`);
   }
   function _a(t2) {
     if (Pt.isDocumentKey(t2))
@@ -8616,6 +9022,18 @@ This typically indicates that your device does not have a healthy Internet conne
       return _a(s), new Ra2(t2.firestore, null, s);
     }
   }
+  function va(t2, e, ...n) {
+    if (t2 = getModularInstance(t2), arguments.length === 1 && (e = tt.I()), fa2("doc", "path", e), t2 instanceof Ta) {
+      const s = ht.fromString(e, ...n);
+      return wa(s), new Ia2(t2, null, new Pt(s));
+    }
+    {
+      if (!(t2 instanceof Ia2 || t2 instanceof Ra2))
+        throw new j(K2.INVALID_ARGUMENT, "Expected first argument to collection() to be a CollectionReference, a DocumentReference or FirebaseFirestore");
+      const s = t2._path.child(ht.fromString(e, ...n));
+      return wa(s), new Ia2(t2.firestore, t2 instanceof Ra2 ? t2.converter : null, new Pt(s));
+    }
+  }
   var Da = class {
     constructor() {
       this._c = Promise.resolve(), this.mc = [], this.gc = false, this.yc = [], this.Tc = null, this.Ec = false, this.Ic = false, this.Ac = [], this.ar = new Xr(this, "async_queue_retry"), this.Rc = () => {
@@ -8784,6 +9202,11 @@ This typically indicates that your device does not have a healthy Internet conne
       return this._byteString.isEqual(t2._byteString);
     }
   };
+  var Za2 = class {
+    constructor(t2) {
+      this._methodName = t2;
+    }
+  };
   var tu = class {
     constructor(t2, e) {
       if (!isFinite(t2) || t2 < -90 || t2 > 90)
@@ -8811,6 +9234,239 @@ This typically indicates that your device does not have a healthy Internet conne
       return et(this._lat, t2._lat) || et(this._long, t2._long);
     }
   };
+  var eu = /^__.*__$/;
+  var nu = class {
+    constructor(t2, e, n) {
+      this.data = t2, this.fieldMask = e, this.fieldTransforms = n;
+    }
+    toMutation(t2, e) {
+      return this.fieldMask !== null ? new nn(t2, this.data, this.fieldMask, e, this.fieldTransforms) : new en(t2, this.data, e, this.fieldTransforms);
+    }
+  };
+  function iu(t2) {
+    switch (t2) {
+      case 0:
+      case 2:
+      case 1:
+        return true;
+      case 3:
+      case 4:
+        return false;
+      default:
+        throw L2();
+    }
+  }
+  var ru = class {
+    constructor(t2, e, n, s, i, r) {
+      this.settings = t2, this.databaseId = e, this.N = n, this.ignoreUndefinedProperties = s, i === void 0 && this.xc(), this.fieldTransforms = i || [], this.fieldMask = r || [];
+    }
+    get path() {
+      return this.settings.path;
+    }
+    get kc() {
+      return this.settings.kc;
+    }
+    $c(t2) {
+      return new ru(Object.assign(Object.assign({}, this.settings), t2), this.databaseId, this.N, this.ignoreUndefinedProperties, this.fieldTransforms, this.fieldMask);
+    }
+    Oc(t2) {
+      var e;
+      const n = (e = this.path) === null || e === void 0 ? void 0 : e.child(t2), s = this.$c({
+        path: n,
+        Fc: false
+      });
+      return s.Mc(t2), s;
+    }
+    Lc(t2) {
+      var e;
+      const n = (e = this.path) === null || e === void 0 ? void 0 : e.child(t2), s = this.$c({
+        path: n,
+        Fc: false
+      });
+      return s.xc(), s;
+    }
+    Bc(t2) {
+      return this.$c({
+        path: void 0,
+        Fc: true
+      });
+    }
+    Uc(t2) {
+      return bu(t2, this.settings.methodName, this.settings.qc || false, this.path, this.settings.Kc);
+    }
+    contains(t2) {
+      return this.fieldMask.find((e) => t2.isPrefixOf(e)) !== void 0 || this.fieldTransforms.find((e) => t2.isPrefixOf(e.field)) !== void 0;
+    }
+    xc() {
+      if (this.path)
+        for (let t2 = 0; t2 < this.path.length; t2++)
+          this.Mc(this.path.get(t2));
+    }
+    Mc(t2) {
+      if (t2.length === 0)
+        throw this.Uc("Document fields must not be empty");
+      if (iu(this.kc) && eu.test(t2))
+        throw this.Uc('Document fields cannot begin and end with "__"');
+    }
+  };
+  var ou = class {
+    constructor(t2, e, n) {
+      this.databaseId = t2, this.ignoreUndefinedProperties = e, this.N = n || Yr(t2);
+    }
+    jc(t2, e, n, s = false) {
+      return new ru({
+        kc: t2,
+        methodName: e,
+        Kc: n,
+        path: ft.emptyPath(),
+        Fc: false,
+        qc: s
+      }, this.databaseId, this.N, this.ignoreUndefinedProperties);
+    }
+  };
+  function cu(t2) {
+    const e = t2._freezeSettings(), n = Yr(t2._databaseId);
+    return new ou(t2._databaseId, !!e.ignoreUndefinedProperties, n);
+  }
+  function au(t2, e, n, s, i, r = {}) {
+    const o = t2.jc(r.merge || r.mergeFields ? 2 : 0, e, n, i);
+    Eu("Data must be an object, but it was:", o, s);
+    const c = pu(s, o);
+    let a, u;
+    if (r.merge)
+      a = new dt(o.fieldMask), u = o.fieldTransforms;
+    else if (r.mergeFields) {
+      const t3 = [];
+      for (const s2 of r.mergeFields) {
+        const i2 = Iu(e, s2, n);
+        if (!o.contains(i2))
+          throw new j(K2.INVALID_ARGUMENT, `Field '${i2}' is specified in your field mask but missing from your input data.`);
+        Pu(t3, i2) || t3.push(i2);
+      }
+      a = new dt(t3), u = o.fieldTransforms.filter((t4) => a.covers(t4.field));
+    } else
+      a = null, u = o.fieldTransforms;
+    return new nu(new Ut(c), a, u);
+  }
+  var lu = class extends Za2 {
+    _toFieldTransform(t2) {
+      return new je(t2.path, new Oe());
+    }
+    isEqual(t2) {
+      return t2 instanceof lu;
+    }
+  };
+  function yu(t2, e) {
+    if (Tu(t2 = getModularInstance(t2)))
+      return Eu("Unsupported field value:", e, t2), pu(t2, e);
+    if (t2 instanceof Za2)
+      return function(t3, e2) {
+        if (!iu(e2.kc))
+          throw e2.Uc(`${t3._methodName}() can only be used with update() and set()`);
+        if (!e2.path)
+          throw e2.Uc(`${t3._methodName}() is not currently supported inside arrays`);
+        const n = t3._toFieldTransform(e2);
+        n && e2.fieldTransforms.push(n);
+      }(t2, e), null;
+    if (t2 === void 0 && e.ignoreUndefinedProperties)
+      return null;
+    if (e.path && e.fieldMask.push(e.path), t2 instanceof Array) {
+      if (e.settings.Fc && e.kc !== 4)
+        throw e.Uc("Nested arrays are not supported");
+      return function(t3, e2) {
+        const n = [];
+        let s = 0;
+        for (const i of t3) {
+          let t4 = yu(i, e2.Bc(s));
+          t4 == null && (t4 = {
+            nullValue: "NULL_VALUE"
+          }), n.push(t4), s++;
+        }
+        return {
+          arrayValue: {
+            values: n
+          }
+        };
+      }(t2, e);
+    }
+    return function(t3, e2) {
+      if ((t3 = getModularInstance(t3)) === null)
+        return {
+          nullValue: "NULL_VALUE"
+        };
+      if (typeof t3 == "number")
+        return Ce(e2.N, t3);
+      if (typeof t3 == "boolean")
+        return {
+          booleanValue: t3
+        };
+      if (typeof t3 == "string")
+        return {
+          stringValue: t3
+        };
+      if (t3 instanceof Date) {
+        const n = it.fromDate(t3);
+        return {
+          timestampValue: Un(e2.N, n)
+        };
+      }
+      if (t3 instanceof it) {
+        const n = new it(t3.seconds, 1e3 * Math.floor(t3.nanoseconds / 1e3));
+        return {
+          timestampValue: Un(e2.N, n)
+        };
+      }
+      if (t3 instanceof tu)
+        return {
+          geoPointValue: {
+            latitude: t3.latitude,
+            longitude: t3.longitude
+          }
+        };
+      if (t3 instanceof Xa2)
+        return {
+          bytesValue: qn(e2.N, t3._byteString)
+        };
+      if (t3 instanceof Ia2) {
+        const n = e2.databaseId, s = t3.firestore._databaseId;
+        if (!s.isEqual(n))
+          throw e2.Uc(`Document reference is for database ${s.projectId}/${s.database} but should be for database ${n.projectId}/${n.database}`);
+        return {
+          referenceValue: Qn(t3.firestore._databaseId || e2.databaseId, t3._key.path)
+        };
+      }
+      throw e2.Uc(`Unsupported field value: ${ma2(t3)}`);
+    }(t2, e);
+  }
+  function pu(t2, e) {
+    const n = {};
+    return at(t2) ? e.path && e.path.length > 0 && e.fieldMask.push(e.path) : ct(t2, (t3, s) => {
+      const i = yu(s, e.Oc(t3));
+      i != null && (n[t3] = i);
+    }), {
+      mapValue: {
+        fields: n
+      }
+    };
+  }
+  function Tu(t2) {
+    return !(typeof t2 != "object" || t2 === null || t2 instanceof Array || t2 instanceof Date || t2 instanceof it || t2 instanceof tu || t2 instanceof Xa2 || t2 instanceof Ia2 || t2 instanceof Za2);
+  }
+  function Eu(t2, e, n) {
+    if (!Tu(n) || !function(t3) {
+      return typeof t3 == "object" && t3 !== null && (Object.getPrototypeOf(t3) === Object.prototype || Object.getPrototypeOf(t3) === null);
+    }(n)) {
+      const s = ma2(n);
+      throw s === "an object" ? e.Uc(t2 + " a custom object") : e.Uc(t2 + " " + s);
+    }
+  }
+  function Iu(t2, e, n) {
+    if ((e = getModularInstance(e)) instanceof Ja2)
+      return e._internalPath;
+    if (typeof e == "string")
+      return Ru(t2, e);
+    throw bu("Field path arguments must be of type string or FieldPath.", t2, false, void 0, n);
+  }
   var Au = new RegExp("[~\\*/\\[\\]]");
   function Ru(t2, e, n) {
     if (e.search(Au) >= 0)
@@ -8827,6 +9483,9 @@ This typically indicates that your device does not have a healthy Internet conne
     n && (c += " (via `toFirestore()`)"), c += ". ";
     let a = "";
     return (r || o) && (a += " (found", r && (a += ` in field ${s}`), o && (a += ` in document ${i}`), a += ")"), new j(K2.INVALID_ARGUMENT, c + t2 + a);
+  }
+  function Pu(t2, e) {
+    return t2.some((t3) => t3.isEqual(e));
   }
   var vu = class {
     constructor(t2, e, n, s, i) {
@@ -9071,6 +9730,10 @@ This typically indicates that your device does not have a healthy Internet conne
       return s.isEqual(e) || O2(`Document ${i} contains a document reference within a different database (${s.projectId}/${s.database}) which is not supported. It will be treated as a reference in the current database (${e.projectId}/${e.database}) instead.`), i;
     }
   };
+  function sh(t2, e, n) {
+    let s;
+    return s = t2 ? n && (n.merge || n.mergeFields) ? t2.toFirestore(e, n) : t2.toFirestore(e) : e, s;
+  }
   var ah = class extends nh {
     constructor(t2) {
       super(), this.firestore = t2;
@@ -9087,6 +9750,18 @@ This typically indicates that your device does not have a healthy Internet conne
     t2 = ga(t2, Aa2);
     const e = ga(t2.firestore, ka2), n = Fa2(e), s = new ah(e);
     return Ou(t2._query), ia2(n, t2._query).then((n2) => new xu(e, s, t2, n2));
+  }
+  function wh(t2, e, n) {
+    t2 = ga(t2, Ia2);
+    const s = ga(t2.firestore, ka2), i = sh(t2.converter, e, n);
+    return Th(s, [au(cu(s), "setDoc", t2._key, i, t2.converter !== null, n).toMutation(t2._key, Ge.none())]);
+  }
+  function mh(t2) {
+    return Th(ga(t2.firestore, ka2), [new cn(t2._key, Ge.none())]);
+  }
+  function gh(t2, e) {
+    const n = ga(t2.firestore, ka2), s = va(t2), i = sh(t2.converter, e);
+    return Th(n, [au(cu(t2.firestore), "addDoc", s._key, i, t2.converter !== null, {}).toMutation(s._key, Ge.exists(false))]).then(() => s);
   }
   function yh(t2, ...e) {
     var n, s, i;
@@ -9130,9 +9805,18 @@ This typically indicates that your device does not have a healthy Internet conne
       };
     }(Fa2(u), h, c, a);
   }
+  function Th(t2, e) {
+    return function(t3, e2) {
+      const n = new Q2();
+      return t3.asyncQueue.enqueueAndForget(async () => rc2(await Yc2(t3), e2, n)), n.promise;
+    }(Fa2(t2), e);
+  }
   function Eh(t2, e, n) {
     const s = n.docs.get(e._key), i = new ah(t2);
     return new Cu(t2, i, e._key, s, new Du(n.hasPendingWrites, n.fromCache), e.converter);
+  }
+  function bh() {
+    return new lu("serverTimestamp");
   }
   !function(t2, e = true) {
     !function(t3) {
@@ -9161,6 +9845,22 @@ This typically indicates that your device does not have a healthy Internet conne
   };
   var app = initializeApp(firebaseConfig);
   var db2 = Oa();
+  var addLive = async (id2, type, content) => {
+    if (type === "image") {
+      await wh(va(db2, "live", id2.toString()), {
+        image: content
+      });
+    } else if (type === "break") {
+      await wh(va(db2, "live", id2.toString()), {
+        break: true
+      });
+    }
+  };
+  var clearLive = async (numOfSections) => {
+    for (let i = 0; i < numOfSections; i++) {
+      await mh(va(db2, "live", i.toString()));
+    }
+  };
   var fetchPoems = async () => {
     const poemsArr = [];
     const poemsRef = ba2(db2, "poems");
@@ -9175,6 +9875,12 @@ This typically indicates that your device does not have a healthy Internet conne
       });
     });
     return poemsArr;
+  };
+  var addPoem = async (poem) => {
+    await gh(ba2(db2, "poems"), {
+      poem,
+      timestamp: bh()
+    });
   };
 
   // src/poems.js
@@ -9234,7 +9940,7 @@ This typically indicates that your device does not have a healthy Internet conne
   if (window.location.pathname === "/")
     initHomePage();
   function initHomePage() {
-    const container = document.getElementById("container");
+    const container = document.querySelector(".container");
     for (let i = 1; i <= 8; i++) {
       const img = new Image();
       img.src = `./assets/${i}.png`;
@@ -9246,27 +9952,79 @@ This typically indicates that your device does not have a healthy Internet conne
     `);
     }
     const NUM_OF_IMAGES = 8;
+    const SELECTION_INTERVAL = 1e3;
     let imageIndexArr = Array.from({ length: NUM_OF_IMAGES }, (_, i) => i + 1);
     imageIndexArr = randomiseArray(imageIndexArr);
     let curIndex = 0;
+    let inProcessPoem = [];
+    let isMakingPoem2 = false;
     let prevSelectedIndex;
     const interval = setInterval(() => {
       if (curIndex >= NUM_OF_IMAGES) {
         imageIndexArr = randomiseArray(imageIndexArr);
         curIndex = 0;
-        clearInterval(interval);
       }
-      console.log(curIndex, prevSelectedIndex);
-      console.log(imageIndexArr);
       if (prevSelectedIndex) {
-        console.log("prev el", document.getElementById(`image-${prevSelectedIndex}`));
         document.getElementById(`image-${prevSelectedIndex}`).classList.remove("selected");
       }
       const selectedImage = document.getElementById(`image-${imageIndexArr[curIndex]}`);
       selectedImage.classList.add("selected");
+      if (isMakingPoem2)
+        isMakingPoem2 = addToPoem(imageIndexArr[curIndex], inProcessPoem, isMakingPoem2);
       prevSelectedIndex = imageIndexArr[curIndex];
       curIndex++;
-    }, 1e3);
+    }, SELECTION_INTERVAL);
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space") {
+        if (!isMakingPoem2) {
+          isMakingPoem2 = true;
+        }
+      }
+    });
+  }
+  var SELECTING_LENGTH = 10;
+  var MIN_LINE_LENGTH = 2;
+  var MAX_LINE_LENGTH = 8;
+  var PARAGRAPH_BREAK_CHANCE = 0.1;
+  var NORMAL_BREAK_CHANCE = 0.33;
+  var imagesAdded = 0;
+  var curLineLength = 0;
+  function addToPoem(curImageIndex, inProcessPoem) {
+    if (imagesAdded === SELECTING_LENGTH) {
+      clearLive(inProcessPoem.length);
+      addPoem(inProcessPoem);
+      imagesAdded = 0;
+      curLineLength = 0;
+      isMakingPoem = false;
+      return false;
+    }
+    addSection(curImageIndex);
+    imagesAdded++;
+    curLineLength++;
+    if (curLineLength === MAX_LINE_LENGTH) {
+      addSection("break");
+      curLineLength = 0;
+    }
+    if (curLineLength >= MIN_LINE_LENGTH) {
+      if (Math.random() <= NORMAL_BREAK_CHANCE) {
+        addSection("break");
+        if (Math.random() <= PARAGRAPH_BREAK_CHANCE) {
+          addSection("break");
+        }
+        curLineLength = 0;
+      }
+    }
+    function addSection(content) {
+      inProcessPoem.push(content);
+      let id2 = inProcessPoem.length;
+      console.log("ID", id2, content);
+      if (content !== "break") {
+        addLive(id2, "image", content);
+      } else {
+        addLive(id2, "break");
+      }
+    }
+    return true;
   }
   function randomiseArray(array) {
     for (let i = array.length - 1; i > 0; i--) {

@@ -12,24 +12,40 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, arrayUnion, Timestamp, orderBy, deleteField, } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, arrayUnion, Timestamp, orderBy, deleteField, deleteDoc } from "firebase/firestore";
 
 export const db = getFirestore();
 
 
 
 
-export const addLive = async () => {
+export const addLive = async (id, type, content) => {
 
-  // if first bit, set id = 0 and have the info be the server timestamp
+  if (type === 'image') {
+
+    await setDoc(doc(db, "live", id.toString()), {
+      image: content
+    })
+
+  } else if (type === 'break') {
+
+    await setDoc(doc(db, "live", id.toString()), {
+      break: true
+    })
+
+  }
 
 }
 
-export const clearLive = async () => {
+export const clearLive = async (numOfSections) => {
 
   // delete all documents in live collection
+  for (let i = 0; i < numOfSections; i++) {
+    await deleteDoc(doc(db, "live", i.toString()))
+  }
 
 }
+
 
 
 export const fetchPoems = async () => {

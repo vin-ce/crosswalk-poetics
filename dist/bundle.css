@@ -9,7 +9,7 @@ body {
   color: #ffc0cb;
   font-style: italic;
 }
-.home #container {
+.home .container {
   display: flex;
   flex-wrap: wrap;
 }
@@ -18,7 +18,7 @@ body {
   margin-bottom: 0;
 }
 .home img {
-  max-width: 18rem;
+  max-width: 64rem;
   height: 18rem;
   object-fit: contain;
   margin: 0 1.2rem;
@@ -42,6 +42,7 @@ body {
 .poems .poemContainer {
   display: flex;
   flex-wrap: wrap;
+  margin-bottom: 12rem;
 }
 .poems .time {
   font-size: 21px;
@@ -49,10 +50,10 @@ body {
   margin-bottom: 3.6rem;
 }
 .poems img {
-  max-width: 18rem;
+  max-width: 64rem;
   height: 18rem;
   object-fit: contain;
-  margin: 0 1.2rem;
+  margin: 0 1.2rem 2.4rem 1.2rem;
 }
 .poems .break {
   flex-basis: 100%;
