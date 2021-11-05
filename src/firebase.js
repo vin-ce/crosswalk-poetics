@@ -12,7 +12,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, arrayUnion, Timestamp, orderBy, deleteField, deleteDoc } from "firebase/firestore";
+import { getFirestore, collection, doc, setDoc, addDoc, updateDoc, getDoc, getDocs, onSnapshot, serverTimestamp, query, where, arrayUnion, Timestamp, orderBy, deleteField, deleteDoc, limit } from "firebase/firestore";
 
 export const db = getFirestore();
 
@@ -40,7 +40,7 @@ export const addLive = async (id, type, content) => {
 export const clearLive = async (numOfSections) => {
 
   // delete all documents in live collection
-  for (let i = 0; i < numOfSections; i++) {
+  for (let i = 1; i <= numOfSections; i++) {
     await deleteDoc(doc(db, "live", i.toString()))
   }
 
@@ -69,6 +69,27 @@ export const fetchPoems = async () => {
   })
 
   return poemsArr
+
+}
+
+export const fetchLatestPoem = async () => {
+  const poemsRef = collection(db, "poems")
+  const q = query(poemsRef, orderBy("timestamp", "desc"), limit(1))
+  const poemsSnapshot = await getDocs(q)
+
+  let poem;
+
+  poemsSnapshot.forEach(doc => {
+    const data = doc.data()
+    console.log(data)
+
+    poem = {
+      poem: data.poem,
+      timestamp: data.timestamp.toDate()
+    }
+  })
+
+  return poem
 
 }
 

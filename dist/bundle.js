@@ -8883,6 +8883,10 @@ This typically indicates that your device does not have a healthy Internet conne
     }
     return t2;
   }
+  function ya2(t2, e) {
+    if (e <= 0)
+      throw new j(K2.INVALID_ARGUMENT, `Function ${t2}() requires a positive number, but it was: ${e}.`);
+  }
   var pa2 = class {
     constructor(t2) {
       var e;
@@ -9663,6 +9667,17 @@ This typically indicates that your device does not have a healthy Internet conne
     const n = e, s = Su("orderBy", t2);
     return new Uu(s, n);
   }
+  var Ku = class extends Fu {
+    constructor(t2, e, n) {
+      super(), this.type = t2, this.Yc = e, this.Xc = n;
+    }
+    _apply(t2) {
+      return new Aa2(t2.firestore, t2.converter, Ie(t2._query, this.Yc, this.Xc));
+    }
+  };
+  function ju(t2) {
+    return ya2("limit", t2), new Ku("limit", t2, "F");
+  }
   function eh(t2, e, n) {
     if (!n.isEqual(e))
       throw new j(K2.INVALID_ARGUMENT, `Invalid query. You have a where filter with an inequality (<, <=, !=, not-in, >, or >=) on field '${e.toString()}' and so you must also use '${e.toString()}' as your first argument to orderBy(), but your first orderBy() is on field '${n.toString()}' instead.`);
@@ -9857,24 +9872,24 @@ This typically indicates that your device does not have a healthy Internet conne
     }
   };
   var clearLive = async (numOfSections) => {
-    for (let i = 0; i < numOfSections; i++) {
+    for (let i = 1; i <= numOfSections; i++) {
       await mh(va(db2, "live", i.toString()));
     }
   };
-  var fetchPoems = async () => {
-    const poemsArr = [];
+  var fetchLatestPoem = async () => {
     const poemsRef = ba2(db2, "poems");
-    const q3 = Mu(poemsRef, qu("timestamp", "asc"));
+    const q3 = Mu(poemsRef, qu("timestamp", "desc"), ju(1));
     const poemsSnapshot = await lh(q3);
+    let poem;
     poemsSnapshot.forEach((doc) => {
       const data = doc.data();
       console.log(data);
-      poemsArr.push({
+      poem = {
         poem: data.poem,
         timestamp: data.timestamp.toDate()
-      });
+      };
     });
-    return poemsArr;
+    return poem;
   };
   var addPoem = async (poem) => {
     await gh(ba2(db2, "poems"), {
@@ -9888,51 +9903,63 @@ This typically indicates that your device does not have a healthy Internet conne
     loadPoems();
   }
   async function loadPoems() {
-    const poemsArr = await fetchPoems();
-    console.log("POEMS", poemsArr);
-    const allPoems = document.querySelector(".allPoems");
-    poemsArr.forEach((poem) => {
-      const poemContainerEl = document.createElement("div");
-      poemContainerEl.classList.add("poemContainer");
-      console.log(poem.timestamp);
-      poemContainerEl.insertAdjacentHTML("beforeend", `
-      <div class="time">${poem.timestamp.toLocaleTimeString()}, ${poem.timestamp.toDateString()}</div>
-      <div class="break" />
-    `);
-      poem.poem.forEach((piece, index) => {
-        if (piece == "break") {
-          poemContainerEl.insertAdjacentHTML("beforeend", `
-          <div class="break" />
-        `);
-        } else {
-          poemContainerEl.insertAdjacentHTML("beforeend", `
-          <img src="../assets/${piece}.png" />   
-        `);
-        }
-      });
-      allPoems.insertAdjacentElement("beforeend", poemContainerEl);
-    });
-    const liveRef = ba2(db2, "live");
-    let newPoemPiece;
-    const liveEl = document.querySelector(".live");
-    const unsubscribe = yh(liveRef, (snapshot) => {
+    const poemsRef = ba2(db2, "poems");
+    let newPrevPoemPiece;
+    const unsubscribePoems = yh(poemsRef, (snapshot) => {
       snapshot.docChanges().forEach((change) => {
         if (change.type === "added") {
-          newPoemPiece = change.doc.data();
-          console.log("added: ", newPoemPiece);
-          if (newPoemPiece.timestamp) {
-          }
-          if (newPoemPiece.image) {
+          let data = change.doc.data();
+          newPrevPoemPiece = {
+            poem: data.poem,
+            timestamp: data.timestamp.toDate()
+          };
+          addPrevPoem(newPrevPoemPiece);
+          liveEl.innerHTML = `
+          <div class="heading">a new poem</div>
+          <div class="break"></div>
+          `;
+        }
+      });
+    });
+    const liveRef = ba2(db2, "live");
+    let newLivePoemPiece;
+    const liveEl = document.querySelector(".live");
+    const unsubscribeLive = yh(liveRef, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          newLivePoemPiece = change.doc.data();
+          if (newLivePoemPiece.image) {
             liveEl.insertAdjacentHTML("beforeend", `
-            <img src="../assets/${newPoemPiece.image}.png" />  
+            <img src="../assets/${newLivePoemPiece.image}.png" />  
           `);
           } else {
             liveEl.insertAdjacentHTML("beforeend", `
-            <div class="break" />
+            <div class="break"></div>
           `);
           }
         }
       });
+    });
+    const latestPoem = await fetchLatestPoem();
+    addPrevPoem(latestPoem);
+  }
+  function addPrevPoem(data) {
+    const prevContainerEl = document.querySelector(".prev");
+    prevContainerEl.innerHTML = "";
+    prevContainerEl.insertAdjacentHTML("beforeend", `
+      <div class="time heading">created on ${data.timestamp.toLocaleTimeString()}</div>
+      <div class="break"></div>
+    `);
+    data.poem.forEach((piece, index) => {
+      if (piece == "break") {
+        prevContainerEl.insertAdjacentHTML("beforeend", `
+          <div class="break" />
+        `);
+      } else {
+        prevContainerEl.insertAdjacentHTML("beforeend", `
+          <img src="../assets/${piece}.png" />   
+        `);
+      }
     });
   }
 
@@ -9982,17 +10009,26 @@ This typically indicates that your device does not have a healthy Internet conne
       }
     });
   }
-  var SELECTING_LENGTH = 10;
-  var MIN_LINE_LENGTH = 2;
+  var selectingLength = getRandomLength();
+  var MIN_LINE_LENGTH = 3;
   var MAX_LINE_LENGTH = 8;
-  var PARAGRAPH_BREAK_CHANCE = 0.1;
-  var NORMAL_BREAK_CHANCE = 0.33;
+  var NORMAL_BREAK_CHANCE = 0.25;
   var imagesAdded = 0;
   var curLineLength = 0;
+  var audio = document.querySelector(".crosswalkBeeps");
   function addToPoem(curImageIndex, inProcessPoem) {
-    if (imagesAdded === SELECTING_LENGTH) {
+    if (inProcessPoem.length === 0) {
+      console.log("starting...");
+      audio.play();
+    }
+    if (imagesAdded === selectingLength) {
       clearLive(inProcessPoem.length);
       addPoem(inProcessPoem);
+      inProcessPoem.length = 0;
+      selectingLength = getRandomLength();
+      console.log("selecting length", selectingLength, inProcessPoem);
+      audio.pause();
+      audio.currentTime = 0;
       imagesAdded = 0;
       curLineLength = 0;
       isMakingPoem = false;
@@ -10008,9 +10044,6 @@ This typically indicates that your device does not have a healthy Internet conne
     if (curLineLength >= MIN_LINE_LENGTH) {
       if (Math.random() <= NORMAL_BREAK_CHANCE) {
         addSection("break");
-        if (Math.random() <= PARAGRAPH_BREAK_CHANCE) {
-          addSection("break");
-        }
         curLineLength = 0;
       }
     }
@@ -10032,6 +10065,11 @@ This typically indicates that your device does not have a healthy Internet conne
       [array[i], array[j2]] = [array[j2], array[i]];
     }
     return array;
+  }
+  function getRandomLength() {
+    let min = 20;
+    let max = 30;
+    return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 })();
 /*! *****************************************************************************

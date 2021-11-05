@@ -84,24 +84,43 @@ function initHomePage () {
 
 }
 
-const SELECTING_LENGTH = 10 // 30 x internal, e.g 30 seconds / 30 images
-const MIN_LINE_LENGTH = 2
+let selectingLength = getRandomLength()
+const MIN_LINE_LENGTH = 3
 const MAX_LINE_LENGTH = 8
-const PARAGRAPH_BREAK_CHANCE = 0.1
-const NORMAL_BREAK_CHANCE = 0.33
+// const PARAGRAPH_BREAK_CHANCE = 0.1
+const NORMAL_BREAK_CHANCE = 0.25
+
 let imagesAdded = 0
 let curLineLength = 0
 
+
+const audio = document.querySelector('.crosswalkBeeps')
+
 function addToPoem (curImageIndex, inProcessPoem) {
 
+
+  if (inProcessPoem.length === 0) {
+    console.log("starting...")
+    audio.play()
+  }
+
   // poem is completed
-  if (imagesAdded === SELECTING_LENGTH) {
+  if (imagesAdded === selectingLength) {
 
     // clear live collection
     // add to poems collection
 
     clearLive(inProcessPoem.length)
     addPoem(inProcessPoem)
+
+    // inProcessPoem = [] <--- this doesn't work
+    inProcessPoem.length = 0
+
+    selectingLength = getRandomLength()
+    console.log('selecting length', selectingLength, inProcessPoem)
+
+    audio.pause()
+    audio.currentTime = 0
 
     imagesAdded = 0
     curLineLength = 0
@@ -128,9 +147,9 @@ function addToPoem (curImageIndex, inProcessPoem) {
 
       addSection('break')
 
-      if (Math.random() <= PARAGRAPH_BREAK_CHANCE) {
-        addSection('break')
-      }
+      // if (Math.random() <= PARAGRAPH_BREAK_CHANCE) {
+      //   addSection('break')
+      // }
 
       curLineLength = 0
 
@@ -165,3 +184,13 @@ function randomiseArray (array) {
   return array
 };
 
+// https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range
+function getRandomLength () {
+  // min = Math.ceil(min);
+  // max = Math.floor(max);
+  let min = 20
+  let max = 30
+  // let min = 5
+  // let max = 8
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
