@@ -102,6 +102,35 @@ export const addPoem = async (poem) => {
 
 }
 
+export const addPoemStatus = async (status) => {
+
+  await addDoc(collection(db, "poemStatus"), {
+    status: status,
+    timestamp: serverTimestamp()
+  })
+
+}
+
+
+export const fetchPoemStatus = async (status) => {
+  const poemStatusRef = collection(db, "poemStatus")
+  const q = query(poemStatusRef, orderBy("timestamp", "desc"), limit(1))
+  const poemStatusSnapshot = await getDocs(q)
+
+  let poemStatus;
+
+  poemStatusSnapshot.forEach(doc => {
+    const data = doc.data()
+    console.log(data)
+
+    poemStatus = data.status
+  })
+
+  return poemStatus
+}
+
+
+
 const addTimestamp = async () => {
   const poemRef = doc(db, "poems", "qPu6OevfGDADurYAfhP1");
   await updateDoc(poemRef, {

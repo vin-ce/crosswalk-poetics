@@ -9897,6 +9897,24 @@ This typically indicates that your device does not have a healthy Internet conne
       timestamp: bh()
     });
   };
+  var addPoemStatus = async (status) => {
+    await gh(ba2(db2, "poemStatus"), {
+      status,
+      timestamp: bh()
+    });
+  };
+  var fetchPoemStatus = async (status) => {
+    const poemStatusRef = ba2(db2, "poemStatus");
+    const q3 = Mu(poemStatusRef, qu("timestamp", "desc"), ju(1));
+    const poemStatusSnapshot = await lh(q3);
+    let poemStatus;
+    poemStatusSnapshot.forEach((doc) => {
+      const data = doc.data();
+      console.log(data);
+      poemStatus = data.status;
+    });
+    return poemStatus;
+  };
 
   // src/poems.js
   if (window.location.pathname === "/poems/" || window.location.pathname === "/poems") {
@@ -9963,50 +9981,102 @@ This typically indicates that your device does not have a healthy Internet conne
     });
   }
 
+  // src/button.js
+  if (window.location.pathname === "/button/" || window.location.pathname === "/button") {
+    loadButton();
+  }
+  function loadButton() {
+    const buttonEl = document.querySelector(".buttonImage");
+    buttonEl.addEventListener("click", async () => {
+      const latestStatus = await fetchPoemStatus();
+      if (!latestStatus) {
+        console.log("false", latestStatus);
+        addPoemStatus(true);
+      }
+    });
+  }
+
   // src/main.js
   if (window.location.pathname === "/")
     initHomePage();
   function initHomePage() {
     const container = document.querySelector(".container");
-    for (let i = 1; i <= 8; i++) {
+    const TOTAL_NUM_OF_IMAGES = 85;
+    const NUM_OF_IMAGES = 54;
+    const NUM_OF_TXT = 31;
+    let imageIndexArr = [];
+    for (let i = 1; i <= NUM_OF_IMAGES; i++) {
       const img = new Image();
-      img.src = `./assets/${i}.png`;
-      container.insertAdjacentHTML("beforeend", `
-      <div class="imageContainer">
-        <img src="./assets/${i}.png" />    
-        <div id="image-${i}" class="colorCover" />
-      </div>
-    `);
+      img.src = `./assets/img-${i}.png`;
+      imageIndexArr.push(`img-${i}`);
     }
-    const NUM_OF_IMAGES = 8;
+    for (let j2 = 1; j2 <= NUM_OF_TXT; j2++) {
+      const img = new Image();
+      img.src = `./assets/txt-${j2}.png`;
+      imageIndexArr.push(`txt-${j2}`);
+    }
+    imageIndexArr = randomiseArray(imageIndexArr);
+    for (let k2 = 0; k2 < TOTAL_NUM_OF_IMAGES; k2++) {
+      container.insertAdjacentHTML("beforeend", `
+    <div class="imageContainer">
+      <img src="./assets/${imageIndexArr[k2]}.png" />    
+      <div id="${imageIndexArr[k2]}" class="colorCover"></div>
+    </div>
+   `);
+    }
     const SELECTION_INTERVAL = 1e3;
-    let imageIndexArr = Array.from({ length: NUM_OF_IMAGES }, (_, i) => i + 1);
     imageIndexArr = randomiseArray(imageIndexArr);
     let curIndex = 0;
     let inProcessPoem = [];
-    let isMakingPoem2 = false;
+    let isMakingPoem = false;
+    let TEST_MAKING_POEM = false;
     let prevSelectedIndex;
-    const interval = setInterval(() => {
-      if (curIndex >= NUM_OF_IMAGES) {
+    let runSelectionInterval = setInterval(runSelection, SELECTION_INTERVAL);
+    function pauseSelectionInterval(length) {
+      console.log("SELECTION PAUSED");
+      clearInterval(runSelectionInterval);
+      if (!length) {
+        setTimeout(() => {
+          runSelectionInterval = setInterval(runSelection, SELECTION_INTERVAL);
+        }, SELECTION_INTERVAL);
+      } else {
+        setTimeout(() => {
+          runSelectionInterval = setInterval(runSelection, SELECTION_INTERVAL);
+        }, length);
+      }
+    }
+    function runSelection() {
+      console.log("TEST MAKING POEM", TEST_MAKING_POEM);
+      if (curIndex >= TOTAL_NUM_OF_IMAGES) {
         imageIndexArr = randomiseArray(imageIndexArr);
         curIndex = 0;
       }
       if (prevSelectedIndex) {
-        document.getElementById(`image-${prevSelectedIndex}`).classList.remove("selected");
+        document.getElementById(`${prevSelectedIndex}`).classList.remove("selected");
       }
-      const selectedImage = document.getElementById(`image-${imageIndexArr[curIndex]}`);
+      const selectedImage = document.getElementById(`${imageIndexArr[curIndex]}`);
       selectedImage.classList.add("selected");
-      if (isMakingPoem2)
-        isMakingPoem2 = addToPoem(imageIndexArr[curIndex], inProcessPoem, isMakingPoem2);
+      if (isMakingPoem)
+        isMakingPoem = addToPoem(imageIndexArr[curIndex], inProcessPoem, pauseSelectionInterval, SELECTION_INTERVAL);
       prevSelectedIndex = imageIndexArr[curIndex];
       curIndex++;
-    }, SELECTION_INTERVAL);
+    }
     document.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
-        if (!isMakingPoem2) {
-          isMakingPoem2 = true;
+        if (!isMakingPoem) {
+          isMakingPoem = true;
+          addPoemStatus(true);
         }
       }
+    });
+    const poemStatusRef = ba2(db2, "poemStatus");
+    const unsubscribePoemStatus = yh(poemStatusRef, (snapshot) => {
+      snapshot.docChanges().forEach((change) => {
+        if (change.type === "added") {
+          newPoemStatus = change.doc.data();
+          isMakingPoem = newPoemStatus.status;
+        }
+      });
     });
   }
   var selectingLength = getRandomLength();
@@ -10015,37 +10085,47 @@ This typically indicates that your device does not have a healthy Internet conne
   var NORMAL_BREAK_CHANCE = 0.25;
   var imagesAdded = 0;
   var curLineLength = 0;
-  var audio = document.querySelector(".crosswalkBeeps");
-  function addToPoem(curImageIndex, inProcessPoem) {
+  var typewriter_clacks = document.querySelector(".typewriter_clacks");
+  var typewriter_carriage_return = document.querySelector(".typewriter_carriage_return");
+  var typewriter_bell = document.querySelector(".typewriter_bell");
+  function addToPoem(curImageIndex, inProcessPoem, pauseSelectionInterval, SELECTION_INTERVAL) {
     if (inProcessPoem.length === 0) {
-      console.log("starting...");
-      audio.play();
+      typewriter_clacks.play();
     }
     if (imagesAdded === selectingLength) {
       clearLive(inProcessPoem.length);
       addPoem(inProcessPoem);
       inProcessPoem.length = 0;
       selectingLength = getRandomLength();
-      console.log("selecting length", selectingLength, inProcessPoem);
-      audio.pause();
-      audio.currentTime = 0;
+      typewriter_clacks.pause();
+      typewriter_clacks.currentTime = 0;
+      typewriter_bell.play();
+      pauseSelectionInterval(2e3);
       imagesAdded = 0;
       curLineLength = 0;
-      isMakingPoem = false;
+      addPoemStatus(false);
       return false;
     }
     addSection(curImageIndex);
     imagesAdded++;
     curLineLength++;
     if (curLineLength === MAX_LINE_LENGTH) {
-      addSection("break");
-      curLineLength = 0;
-    }
-    if (curLineLength >= MIN_LINE_LENGTH) {
+      addBreak();
+    } else if (curLineLength >= MIN_LINE_LENGTH) {
       if (Math.random() <= NORMAL_BREAK_CHANCE) {
-        addSection("break");
-        curLineLength = 0;
+        addBreak();
       }
+    }
+    function addBreak() {
+      console.log("BREAK");
+      typewriter_clacks.pause();
+      typewriter_carriage_return.play();
+      addSection("break");
+      pauseSelectionInterval();
+      setTimeout(() => {
+        typewriter_clacks.play();
+      }, SELECTION_INTERVAL);
+      curLineLength = 0;
     }
     function addSection(content) {
       inProcessPoem.push(content);
