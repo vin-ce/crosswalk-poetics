@@ -23,9 +23,6 @@ const compileJS = () => {
       stylusLoader()
     ],
 
-    // platform: 'node',
-    // target: [ 'node10.4' ],
-
   }).then(() => {
     console.log('✨ success!')
   }).catch(() => {
@@ -47,13 +44,10 @@ watcher.on('ready', async () => {
 
 })
 
-if (process.env.ENVIRONMENT === 'local') {
-
-  liveserver.start({
-    open: false,
-    host: '0.0.0.0',
-    port: 3000,
-    root: 'dist',
-    loglevel: 0
-  })
-}
+liveserver.start({
+  open: false,
+  host: '0.0.0.0',
+  port: 3000,
+  root: 'dist',
+  loglevel: 0
+})
