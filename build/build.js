@@ -30,24 +30,29 @@ const compileJS = () => {
   })
 }
 
-let watcher = chokidar.watch(pathToWatch,
-  {
-    persistent: true
-  }
-)
 
-watcher.on('ready', async () => {
-  compileJS();
+if (process.env.ENVIRONMENT === 'local') {
+  let watcher = chokidar.watch(pathToWatch,
+    {
+      persistent: true
+    }
+  )
 
-  watcher.on('add', compileJS)
-  watcher.on('change', compileJS)
+  watcher.on('ready', async () => {
+    compileJS();
 
-})
+    watcher.on('add', compileJS)
+    watcher.on('change', compileJS)
 
-liveserver.start({
-  open: false,
-  host: '0.0.0.0',
-  port: 3000,
-  root: 'dist',
-  loglevel: 0
-})
+  })
+
+  liveserver.start({
+    open: false,
+    host: '0.0.0.0',
+    port: 3000,
+    root: 'dist',
+    loglevel: 0
+  })
+} else {
+  compileJS()
+}
