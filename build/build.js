@@ -1,5 +1,8 @@
+
 const esbuild = require('esbuild')
 const { stylusLoader } = require('esbuild-stylus-loader')
+
+require('dotenv').config()
 
 const chokidar = require('chokidar')
 const liveserver = require('live-server')
@@ -44,10 +47,13 @@ watcher.on('ready', async () => {
 
 })
 
-liveserver.start({
-  open: false,
-  host: '0.0.0.0',
-  port: 3000,
-  root: 'dist',
-  loglevel: 0
-})
+if (process.env.ENVIRONMENT === 'local') {
+
+  liveserver.start({
+    open: false,
+    host: '0.0.0.0',
+    port: 3000,
+    root: 'dist',
+    loglevel: 0
+  })
+}
