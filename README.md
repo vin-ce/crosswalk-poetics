@@ -14,8 +14,10 @@ To Do:
 - [x] decide on poem generation rules
 
 - [x] some indicator that the poem is being created?
-- [ ] we need 2 projectors
+- [x] we need 2 projectors
 
 - [x] do something when live is deleted in poems.js -- maybe push the old live poem off to a new section? or do a live listen on poems collection to push it in and clear out the container
 
-- [] add beep sounds
+- [x] add beep sounds
+
+
