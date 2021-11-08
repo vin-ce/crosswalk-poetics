@@ -164,7 +164,7 @@ function initHomePage () {
 
 let selectingLength = getRandomLength()
 const MIN_LINE_LENGTH = 3
-const MAX_LINE_LENGTH = 8
+const MAX_LINE_LENGTH = 5
 // const PARAGRAPH_BREAK_CHANCE = 0.1
 const NORMAL_BREAK_CHANCE = 0.25
 

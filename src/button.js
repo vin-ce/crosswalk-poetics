@@ -16,6 +16,9 @@ function loadButton () {
       console.log('false', latestStatus)
       addPoemStatus(true)
     }
+    // else {
+    //   addPoemStatus(false)
+    // }
 
   })
 
